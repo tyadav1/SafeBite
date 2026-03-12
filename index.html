@@ -70,7 +70,7 @@
     </div>
 
     <div class="coupon-list">
-      <div class="coupon-card" onclick="showToast('🎟️ Chipotle coupon activated!')">
+      <div class="coupon-card" onclick="showBarcode('Chipotle','Burrito Bowl','$12','Fri','🌯','#f4e4c2','SB-4821-CHI-0934')">
         <div class="coupon-logo" style="background:#f4e4c2">🌯</div>
         <div class="coupon-info">
           <div class="coupon-name">Chipotle</div>
@@ -79,7 +79,7 @@
         <div class="coupon-value">$12</div>
         <div class="coupon-dashes"></div>
       </div>
-      <div class="coupon-card" onclick="showToast('🎟️ Subway coupon activated!')">
+      <div class="coupon-card" onclick="showBarcode('Subway','6&quot; Sub + Drink','$9','Sun','🥪','#e8f5e9','SB-7743-SUB-2201')">
         <div class="coupon-logo" style="background:#e8f5e9">🥪</div>
         <div class="coupon-info">
           <div class="coupon-name">Subway</div>
@@ -88,7 +88,7 @@
         <div class="coupon-value">$9</div>
         <div class="coupon-dashes"></div>
       </div>
-      <div class="coupon-card" onclick="showToast('🎟️ Panera coupon activated!')">
+      <div class="coupon-card" onclick="showBarcode('Panera Bread','Soup + Half Sandwich','$14','Mon','🍞','#fff3e0','SB-3390-PAN-5517')">
         <div class="coupon-logo" style="background:#fff3e0">🍞</div>
         <div class="coupon-info">
           <div class="coupon-name">Panera Bread</div>
@@ -227,6 +227,37 @@
       <div class="nav-icon">✨</div>
       <div class="nav-label">Pantry AI</div>
     </div>
+  </div>
+</div>
+
+<div id="barcodeModal" class="barcode-modal" onclick="closeBarcode()">
+  <div class="barcode-sheet" onclick="event.stopPropagation()">
+    <div class="barcode-sheet-handle"></div>
+    <div class="barcode-header">
+      <div class="barcode-emoji" id="barcodeEmoji"></div>
+      <div class="barcode-meta">
+        <div class="barcode-place" id="barcodePlace"></div>
+        <div class="barcode-item" id="barcodeItem"></div>
+      </div>
+      <div class="barcode-val" id="barcodeVal"></div>
+    </div>
+    <div class="barcode-divider">
+      <div class="barcode-hole left"></div>
+      <div class="barcode-dashes"></div>
+      <div class="barcode-hole right"></div>
+    </div>
+    <div class="barcode-body">
+      <div class="barcode-label">Present at register to redeem</div>
+      <div class="barcode-svg-wrap">
+        <svg id="barcodeSvg" height="80" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="barcode-code" id="barcodeCode"></div>
+    </div>
+    <div class="barcode-footer">
+      <div class="barcode-expires">Expires: <span id="barcodeExpires"></span></div>
+      <div class="barcode-privacy">🔒 Masked — visible only to you</div>
+    </div>
+    <button class="barcode-close" onclick="closeBarcode()">Done</button>
   </div>
 </div>
 

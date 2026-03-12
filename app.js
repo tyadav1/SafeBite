@@ -192,3 +192,53 @@ function showToast(msg){
   if(toastTimer)clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
 }
+
+function generateBarcodeSVG(code){
+  const svg=document.getElementById('barcodeSvg');
+  const W=280,H=80;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML='';
+  const seed=code.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const bars=[];
+  let x=0;
+  const pattern=[2,1,3,1,2,3,1,2,1,3,2,1,1,3,2,1,3,1,2,2,1,3,1,2,3,1,1,2,3,1,2,1,3,2,1,2,3,1,1,2,3,2,1,1,3,2,1,2,1,3,2,3,1,1,2,3,2,1,1,3];
+  let totalW=0;
+  const widths=pattern.map((p,i)=>{
+    const w=((seed*(i+7)*31+i*17)%3)+p;
+    totalW+=w;
+    return w;
+  });
+  const scale=(W-20)/totalW;
+  x=10;
+  widths.forEach((w,i)=>{
+    const bw=Math.max(1,Math.round(w*scale));
+    if(i%2===0){
+      const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('x',x);
+      rect.setAttribute('y',0);
+      rect.setAttribute('width',bw);
+      rect.setAttribute('height',H);
+      rect.setAttribute('fill','#1A1A14');
+      svg.appendChild(rect);
+    }
+    x+=bw;
+  });
+}
+
+function showBarcode(place,item,val,expires,emoji,bg,code){
+  document.getElementById('barcodeEmoji').textContent=emoji;
+  document.getElementById('barcodeEmoji').style.background=bg;
+  document.getElementById('barcodePlace').textContent=place;
+  document.getElementById('barcodeItem').textContent=item;
+  document.getElementById('barcodeVal').textContent=val;
+  document.getElementById('barcodeExpires').textContent=expires;
+  document.getElementById('barcodeCode').textContent=code;
+  generateBarcodeSVG(code);
+  document.getElementById('barcodeModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeBarcode(){
+  document.getElementById('barcodeModal').classList.remove('open');
+  document.body.style.overflow='';
+}
