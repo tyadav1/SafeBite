@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeBite</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#F5F0E8;--dark:#1A1A14;--green:#2D5016;--green-light:#4A7C2F;
+  --green-pale:#E8F0DC;--orange:#E8650A;--orange-pale:#FDF0E6;
+  --gold:#C9A84C;--gold-pale:#FBF5E6;--red:#C23B22;--red-pale:#FDEEE9;
+  --text-muted:#6B6557;--border:#DDD5C4;
+  --shadow:0 4px 24px rgba(26,26,20,0.10);--shadow-lg:0 8px 40px rgba(26,26,20,0.15);
+}
+html,body{height:100%;overflow:hidden;background:var(--cream)}
+body{
+  font-family:'DM Sans',sans-serif;color:var(--dark);display:flex;
+  flex-direction:column;max-width:430px;margin:0 auto;
+  position:relative;background:var(--cream);
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size:200px 200px;pointer-events:none;z-index:0;
+}
+.screen{display:none;flex-direction:column;height:100%;position:relative;z-index:1}
+.screen.active{display:flex}
+.scrollable{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:100px}
+.scrollable::-webkit-scrollbar{display:none}
+.nav-bar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;background:rgba(245,240,232,0.92);
+  backdrop-filter:blur(20px);border-top:1px solid var(--border);
+  display:flex;padding:10px 0 24px;z-index:100;
+}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 0;transition:all 0.2s}
+.nav-icon{width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:20px;transition:transform 0.2s}
+.nav-item:hover .nav-icon{transform:scale(1.15)}
+.nav-label{font-size:10px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-muted);transition:color 0.2s}
+.nav-item.active .nav-label{color:var(--green)}
+.nav-item.active .nav-icon{background:var(--green-pale);border-radius:10px;padding:4px}
+.app-header{padding:48px 24px 20px;background:var(--cream)}
+.app-header h1{font-family:'Fraunces',serif;font-size:28px;font-weight:500;line-height:1.2}
+.pill-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.03em;text-transform:uppercase}
+.pill-green{background:var(--green-pale);color:var(--green-light)}
+.pill-orange{background:var(--orange-pale);color:var(--orange)}
+.pill-gold{background:var(--gold-pale);color:var(--gold)}
+.section-title{font-family:'Fraunces',serif;font-size:22px;font-weight:500;margin-bottom:4px}
+.section-desc{font-size:13px;color:var(--text-muted);margin-bottom:18px;line-height:1.5}
+.login-screen{background:var(--green);justify-content:center;align-items:center;gap:0;padding:40px 32px;position:relative;overflow:hidden}
+.login-screen::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(255,255,255,0.06) 0%,transparent 70%);border-radius:50%}
+.login-screen::after{content:'';position:absolute;bottom:-60px;left:-60px;width:250px;height:250px;background:radial-gradient(circle,rgba(201,168,76,0.15) 0%,transparent 70%);border-radius:50%}
+.login-logo{font-family:'Fraunces',serif;font-size:52px;color:#fff;font-weight:700;letter-spacing:-1px;z-index:1;line-height:1;margin-bottom:4px}
+.login-logo span{color:var(--gold)}
+.login-tagline{font-size:14px;color:rgba(255,255,255,0.65);z-index:1;margin-bottom:48px;text-align:center;font-style:italic;font-family:'Fraunces',serif}
+.login-form{width:100%;z-index:1;display:flex;flex-direction:column;gap:14px}
+.input-wrap{position:relative}
+.input-wrap input{width:100%;padding:16px 20px;border-radius:14px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.10);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border 0.2s,background 0.2s}
+.input-wrap input::placeholder{color:rgba(255,255,255,0.45)}
+.input-wrap input:focus{border-color:rgba(201,168,76,0.7);background:rgba(255,255,255,0.15)}
+.btn-primary{width:100%;padding:17px;border-radius:14px;border:none;background:var(--gold);color:var(--dark);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:0.02em;transition:all 0.2s;margin-top:4px}
+.btn-primary:hover{background:#D4B055;transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.login-privacy{font-size:11px;color:rgba(255,255,255,0.4);text-align:center;z-index:1;margin-top:16px;line-height:1.6}
+.wallet-hero{margin:0 20px 20px;background:linear-gradient(135deg,var(--green) 0%,var(--green-light) 100%);border-radius:24px;padding:28px 24px;color:#fff;position:relative;overflow:hidden}
+.wallet-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:150px;height:150px;background:radial-gradient(circle,rgba(255,255,255,0.08) 0%,transparent 70%);border-radius:50%}
+.wallet-hero::after{content:'';position:absolute;bottom:-20px;left:20px;width:100px;height:100px;background:radial-gradient(circle,rgba(201,168,76,0.2) 0%,transparent 70%);border-radius:50%}
+.wallet-label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.65;margin-bottom:8px}
+.wallet-amount{font-family:'Fraunces',serif;font-size:52px;font-weight:700;line-height:1;letter-spacing:-1px;z-index:1;position:relative}
+.wallet-amount span{font-size:24px;vertical-align:top;margin-top:8px;display:inline-block}
+.wallet-sub{font-size:12px;opacity:0.6;margin-top:6px;position:relative;z-index:1}
+.wallet-chip{position:absolute;top:24px;right:24px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);padding:6px 12px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.8)}
+.wallet-actions{display:flex;gap:10px;margin:0 20px 24px}
+.wallet-action-btn{flex:1;padding:14px;border-radius:14px;border:1.5px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--dark);display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.2s;box-shadow:var(--shadow)}
+.wallet-action-btn:hover{border-color:var(--green);color:var(--green);transform:translateY(-1px)}
+.coupon-list{padding:0 20px;display:flex;flex-direction:column;gap:12px}
+.coupon-card{background:#fff;border-radius:18px;border:1.5px solid var(--border);padding:16px 18px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:all 0.2s}
+.coupon-card:hover{transform:translateX(3px);border-color:var(--green)}
+.coupon-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--green);border-radius:4px 0 0 4px}
+.coupon-logo{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.coupon-info{flex:1}
+.coupon-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.coupon-desc{font-size:12px;color:var(--text-muted)}
+.coupon-value{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--green)}
+.coupon-dashes{position:absolute;right:0;top:0;bottom:0;width:20px;background:repeating-linear-gradient(0deg,var(--cream) 0,var(--cream) 6px,transparent 6px,transparent 12px)}
+.stats-row{display:flex;gap:10px;padding:0 20px 24px}
+.stat-card{flex:1;background:#fff;border-radius:16px;border:1.5px solid var(--border);padding:14px;text-align:center;box-shadow:var(--shadow)}
+.stat-num{font-family:'Fraunces',serif;font-size:26px;font-weight:700;line-height:1;margin-bottom:4px}
+.stat-label{font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+.ledger-map{margin:0 20px 20px;height:160px;background:linear-gradient(135deg,#E8F0DC,#D4E8C0);border-radius:20px;overflow:hidden;position:relative;border:1.5px solid var(--border)}
+.map-pins{position:absolute;inset:0}
+.map-pin{position:absolute;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.2s}
+.map-pin:hover{transform:scale(1.1)}
+.pin-dot{width:24px;height:24px;background:var(--green);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.pin-label{font-size:9px;font-weight:600;background:#fff;padding:2px 6px;border-radius:10px;margin-top:4px;box-shadow:0 2px 6px rgba(0,0,0,0.1);white-space:nowrap;color:var(--dark)}
+.map-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(45,80,22,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(45,80,22,0.06) 1px,transparent 1px);background-size:30px 30px}
+.map-you{position:absolute;bottom:20px;right:30px;width:28px;height:28px;background:var(--orange);border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(232,101,10,0.4);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700}
+.meal-cards{padding:0 20px;display:flex;flex-direction:column;gap:12px}
+.meal-card{background:#fff;border-radius:18px;border:1.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:all 0.2s}
+.meal-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.meal-card-top{padding:16px 18px 12px;display:flex;align-items:flex-start;gap:14px}
+.meal-emoji{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.meal-info{flex:1}
+.meal-name{font-size:15px;font-weight:600;margin-bottom:3px}
+.meal-place{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+.meal-card-bottom{padding:10px 18px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);background:var(--cream)}
+.meal-slots{font-size:12px;color:var(--text-muted)}
+.meal-claim-btn{padding:7px 16px;border-radius:20px;background:var(--green);color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+.meal-claim-btn:hover{background:var(--green-light)}
+.meal-claim-btn:disabled{background:var(--border);color:var(--text-muted);cursor:default}
+.pantry-input-zone{margin:0 20px 20px;background:#fff;border-radius:20px;border:1.5px solid var(--border);padding:20px;box-shadow:var(--shadow)}
+.pantry-input-label{font-size:12px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px}
+.pantry-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;min-height:28px}
+.pantry-tag{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;background:var(--green-pale);color:var(--green-light);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;animation:tagPop 0.2s ease}
+@keyframes tagPop{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+.pantry-tag:hover{background:#d0e8b8}
+.pantry-tag .remove{opacity:0.6;font-size:10px}
+.pantry-input-row{display:flex;gap:8px}
+.pantry-text-input{flex:1;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border 0.2s;background:var(--cream);color:var(--dark)}
+.pantry-text-input:focus{border-color:var(--green)}
+.pantry-add-btn{padding:12px 16px;border-radius:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap}
+.pantry-add-btn:hover{background:var(--green-light)}
+.btn-remix{width:calc(100% - 40px);margin:0 20px 24px;padding:17px;border-radius:16px;border:none;background:linear-gradient(135deg,var(--orange),#F07B2A);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;box-shadow:0 4px 16px rgba(232,101,10,0.30);letter-spacing:0.02em}
+.btn-remix:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(232,101,10,0.35)}
+.btn-remix:active{transform:translateY(0)}
+.btn-remix:disabled{background:var(--border);color:var(--text-muted);box-shadow:none;cursor:default}
+.recipe-output{padding:0 20px}
+.recipe-card{background:#fff;border-radius:20px;border:1.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px;animation:slideUp 0.35s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.recipe-header{padding:20px 20px 14px;border-bottom:1px solid var(--border)}
+.recipe-title{font-family:'Fraunces',serif;font-size:20px;font-weight:500;margin-bottom:6px}
+.recipe-tags{display:flex;gap:6px;flex-wrap:wrap}
+.recipe-body{padding:16px 20px}
+.recipe-section-label{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px}
+.recipe-ingredients{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.recipe-ing{padding:5px 10px;border-radius:8px;background:var(--gold-pale);color:#8B6914;font-size:12px;font-weight:600}
+.recipe-steps{display:flex;flex-direction:column;gap:8px}
+.recipe-step{display:flex;gap:10px;align-items:flex-start}
+.step-num{width:20px;height:20px;min-width:20px;border-radius:50%;background:var(--orange-pale);color:var(--orange);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.step-text{font-size:13px;line-height:1.5;color:var(--dark)}
+.loading-pulse{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:14px}
+.pulse-dots{display:flex;gap:8px}
+.pulse-dot{width:10px;height:10px;border-radius:50%;background:var(--orange);animation:pulse 1.2s ease-in-out infinite}
+.pulse-dot:nth-child(2){animation-delay:0.2s}
+.pulse-dot:nth-child(3){animation-delay:0.4s}
+@keyframes pulse{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1}}
+.loading-text{font-size:13px;color:var(--text-muted);font-style:italic;font-family:'Fraunces',serif}
+.empty-state{display:flex;flex-direction:column;align-items:center;padding:32px 20px;gap:10px}
+.empty-icon{font-size:40px;opacity:0.35}
+.empty-text{font-size:14px;color:var(--text-muted);text-align:center;line-height:1.5}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,0.2);opacity:0;transition:all 0.3s;pointer-events:none;z-index:200;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.no-cook-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:var(--red-pale);color:var(--red);font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
+.barcode-modal{position:fixed;inset:0;background:rgba(26,26,20,0.55);backdrop-filter:blur(6px);z-index:300;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s}
+.barcode-modal.open{opacity:1;pointer-events:all}
+.barcode-sheet{width:100%;max-width:430px;background:var(--cream);border-radius:28px 28px 0 0;padding:0 0 40px;transform:translateY(100%);transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden}
+.barcode-modal.open .barcode-sheet{transform:translateY(0)}
+.barcode-sheet-handle{width:40px;height:4px;background:var(--border);border-radius:4px;margin:14px auto 20px}
+.barcode-header{display:flex;align-items:center;gap:14px;padding:0 24px 20px}
+.barcode-emoji{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.barcode-meta{flex:1}
+.barcode-place{font-size:17px;font-weight:700;font-family:'Fraunces',serif}
+.barcode-item{font-size:13px;color:var(--text-muted);margin-top:2px}
+.barcode-val{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--green)}
+.barcode-divider{display:flex;align-items:center;position:relative;height:24px}
+.barcode-hole{width:22px;height:22px;background:rgba(26,26,20,0.55);border-radius:50%;position:absolute;top:50%;transform:translateY(-50%);z-index:2}
+.barcode-hole.left{left:-11px}
+.barcode-hole.right{right:-11px}
+.barcode-dashes{flex:1;height:1.5px;background:repeating-linear-gradient(90deg,var(--border) 0,var(--border) 8px,transparent 8px,transparent 16px);margin:0 16px}
+.barcode-body{padding:24px 24px 20px;display:flex;flex-direction:column;align-items:center;background:#fff;margin:0 20px;border-radius:20px;border:1.5px solid var(--border)}
+.barcode-label{font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:18px}
+.barcode-svg-wrap{width:100%;display:flex;justify-content:center;margin-bottom:12px}
+#barcodeSvg{width:100%;max-width:280px;display:block}
+.barcode-code{font-family:'DM Sans',sans-serif;font-size:12px;letter-spacing:0.18em;color:var(--text-muted);margin-top:4px}
+.barcode-footer{display:flex;justify-content:space-between;align-items:center;padding:16px 24px 0}
+.barcode-expires{font-size:12px;color:var(--text-muted)}
+.barcode-expires span{font-weight:600;color:var(--dark)}
+.barcode-privacy{font-size:11px;color:var(--text-muted)}
+.barcode-close{display:block;width:calc(100% - 48px);margin:20px 24px 0;padding:16px;border-radius:14px;border:none;background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.barcode-close:hover{background:var(--green-light)}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen active login-screen">
+  <div class="login-logo">Safe<span>Bite</span></div>
+  <div class="login-tagline">Your private food toolkit</div>
+  <div class="login-form">
+    <div class="input-wrap">
+      <input type="text" id="schoolId" placeholder="School ID (e.g. STU-20485)" maxlength="12">
+    </div>
+    <div class="input-wrap">
+      <input type="password" id="pin" placeholder="4-digit PIN" maxlength="4">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Access My Toolkit</button>
+  </div>
+  <div class="login-privacy">🔒 Your information is private and encrypted.<br>No one at school can see your activity.</div>
+</div>
+
+<div id="mainApp" class="screen">
+
+  <div id="walletScreen" class="screen active scrollable" style="height:100%">
+    <div class="app-header">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="pill-badge pill-green">● Stealth Wallet</div>
+        <span style="font-size:20px;cursor:pointer" onclick="showToast('👋 Logged out');setTimeout(()=>{switchToLogin()},1000)">👤</span>
+      </div>
+      <h1 class="section-title">Your Food Credits</h1>
+      <p class="section-desc">Displayed as standard digital coupons — 100% private.</p>
+    </div>
+    <div class="wallet-hero">
+      <div class="wallet-chip">Verified Student</div>
+      <div class="wallet-label">Available Balance</div>
+      <div class="wallet-amount"><span>$</span>47.50</div>
+      <div class="wallet-sub">Resets every Monday · Next: 3 days</div>
+    </div>
+    <div class="wallet-actions">
+      <button class="wallet-action-btn" onclick="showToast('📱 QR code shown at checkout')">📱 Show QR</button>
+      <button class="wallet-action-btn" onclick="showToast('📋 History copied privately')">📋 History</button>
+      <button class="wallet-action-btn" onclick="showToast('⚙️ Settings opened')">⚙️ Settings</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--green)">12</div>
+        <div class="stat-label">Meals Used</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--orange)">5</div>
+        <div class="stat-label">This Week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--gold)">3</div>
+        <div class="stat-label">Coupons</div>
+      </div>
+    </div>
+    <div style="padding:0 20px;margin-bottom:14px">
+      <div class="section-title" style="font-size:18px">Active Coupons</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px">These are your masked food credits</div>
+    </div>
+    <div class="coupon-list">
+      <div class="coupon-card" onclick="showBarcode('Chipotle','Burrito Bowl','$12','Fri','🌯','#f4e4c2','SB-4821-CHI-0934')">
+        <div class="coupon-logo" style="background:#f4e4c2">🌯</div>
+        <div class="coupon-info">
+          <div class="coupon-name">Chipotle</div>
+          <div class="coupon-desc">Burrito Bowl · Expires Fri</div>
+        </div>
+        <div class="coupon-value">$12</div>
+        <div class="coupon-dashes"></div>
+      </div>
+      <div class="coupon-card" onclick="showBarcode('Subway','6&quot; Sub + Drink','$9','Sun','🥪','#e8f5e9','SB-7743-SUB-2201')">
+        <div class="coupon-logo" style="background:#e8f5e9">🥪</div>
+        <div class="coupon-info">
+          <div class="coupon-name">Subway</div>
+          <div class="coupon-desc">6" Sub + Drink · Expires Sun</div>
+        </div>
+        <div class="coupon-value">$9</div>
+        <div class="coupon-dashes"></div>
+      </div>
+      <div class="coupon-card" onclick="showBarcode('Panera Bread','Soup + Half Sandwich','$14','Mon','🍞','#fff3e0','SB-3390-PAN-5517')">
+        <div class="coupon-logo" style="background:#fff3e0">🍞</div>
+        <div class="coupon-info">
+          <div class="coupon-name">Panera Bread</div>
+          <div class="coupon-desc">Soup + Half Sandwich · Expires Mon</div>
+        </div>
+        <div class="coupon-value">$14</div>
+        <div class="coupon-dashes"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ledgerScreen" class="screen scrollable" style="height:100%">
+    <div class="app-header">
+      <div class="pill-badge pill-orange" style="margin-bottom:8px">● Community Ledger</div>
+      <h1 class="section-title">Nearby Pre-Paid Meals</h1>
+      <p class="section-desc">Local restaurants have donated meals. Claim yours quietly — no cash needed.</p>
+    </div>
+    <div class="ledger-map">
+      <div class="map-grid"></div>
+      <div class="map-pins">
+        <div class="map-pin" style="top:30px;left:40px" onclick="showToast('📍 The Green Bowl — 0.3 mi')">
+          <div class="pin-dot"></div><div class="pin-label">The Green Bowl</div>
+        </div>
+        <div class="map-pin" style="top:60px;left:130px" onclick="showToast('📍 Taco Town — 0.6 mi')">
+          <div class="pin-dot"></div><div class="pin-label">Taco Town</div>
+        </div>
+        <div class="map-pin" style="top:25px;right:50px" onclick="showToast('📍 Noodle Nook — 0.9 mi')">
+          <div class="pin-dot"></div><div class="pin-label">Noodle Nook</div>
+        </div>
+        <div class="map-pin" style="bottom:35px;left:70px" onclick="showToast('📍 Pita Palace — 1.1 mi')">
+          <div class="pin-dot"></div><div class="pin-label">Pita Palace</div>
+        </div>
+      </div>
+      <div class="map-you">You</div>
+    </div>
+    <div class="meal-cards">
+      <div class="meal-card">
+        <div class="meal-card-top">
+          <div class="meal-emoji" style="background:#e8f5e9">🥗</div>
+          <div class="meal-info">
+            <div class="meal-name">Grain Bowl — The Green Bowl</div>
+            <div class="meal-place">📍 0.3 mi · Open now · Closes 8 PM</div>
+          </div>
+        </div>
+        <div class="meal-card-bottom">
+          <div class="meal-slots">4 meals left today</div>
+          <button class="meal-claim-btn" onclick="claimMeal(this,'The Green Bowl')">Claim</button>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-card-top">
+          <div class="meal-emoji" style="background:#fff8e1">🌮</div>
+          <div class="meal-info">
+            <div class="meal-name">Taco Plate — Taco Town</div>
+            <div class="meal-place">📍 0.6 mi · Open now · Closes 9 PM</div>
+          </div>
+        </div>
+        <div class="meal-card-bottom">
+          <div class="meal-slots">7 meals left today</div>
+          <button class="meal-claim-btn" onclick="claimMeal(this,'Taco Town')">Claim</button>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-card-top">
+          <div class="meal-emoji" style="background:#fce4ec">🍜</div>
+          <div class="meal-info">
+            <div class="meal-name">Ramen Bowl — Noodle Nook</div>
+            <div class="meal-place">📍 0.9 mi · Open now · Closes 10 PM</div>
+          </div>
+        </div>
+        <div class="meal-card-bottom">
+          <div class="meal-slots">2 meals left today</div>
+          <button class="meal-claim-btn" onclick="claimMeal(this,'Noodle Nook')">Claim</button>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-card-top">
+          <div class="meal-emoji" style="background:#ede7f6">🥙</div>
+          <div class="meal-info">
+            <div class="meal-name">Pita Wrap — Pita Palace</div>
+            <div class="meal-place">📍 1.1 mi · Closes 7:30 PM</div>
+          </div>
+        </div>
+        <div class="meal-card-bottom">
+          <div class="meal-slots">1 meal left today</div>
+          <button class="meal-claim-btn" onclick="claimMeal(this,'Pita Palace')">Claim</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pantryScreen" class="screen scrollable" style="height:100%">
+    <div class="app-header">
+      <div class="pill-badge pill-gold" style="margin-bottom:8px">● AI Pantry Remix</div>
+      <h1 class="section-title">What's in your kitchen?</h1>
+      <p class="section-desc">Add ingredients you have at home. Our AI builds nutritious no-cook meals just for you.</p>
+    </div>
+    <div class="pantry-input-zone">
+      <div class="pantry-input-label">Your Ingredients</div>
+      <div class="pantry-tags" id="pantryTags"></div>
+      <div class="pantry-input-row">
+        <input class="pantry-text-input" id="ingredientInput" placeholder="e.g. peanut butter, banana…" onkeydown="if(event.key==='Enter')addIngredient()">
+        <button class="pantry-add-btn" onclick="addIngredient()">+ Add</button>
+      </div>
+    </div>
+    <div style="padding:0 20px;margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text-muted);font-weight:500">Quick add:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px" id="quickAdds"></div>
+    </div>
+    <button class="btn-remix" id="remixBtn" onclick="generateRecipes()" disabled>
+      <span>✨</span> Remix My Pantry
+    </button>
+    <div class="recipe-output" id="recipeOutput"></div>
+  </div>
+
+  <div class="nav-bar" id="navBar">
+    <div class="nav-item active" onclick="switchTab('wallet',this)">
+      <div class="nav-icon">💳</div>
+      <div class="nav-label">Wallet</div>
+    </div>
+    <div class="nav-item" onclick="switchTab('ledger',this)">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">Ledger</div>
+    </div>
+    <div class="nav-item" onclick="switchTab('pantry',this)">
+      <div class="nav-icon">✨</div>
+      <div class="nav-label">Pantry AI</div>
+    </div>
+  </div>
+</div>
+
+<div id="barcodeModal" class="barcode-modal" onclick="closeBarcode()">
+  <div class="barcode-sheet" onclick="event.stopPropagation()">
+    <div class="barcode-sheet-handle"></div>
+    <div class="barcode-header">
+      <div class="barcode-emoji" id="barcodeEmoji"></div>
+      <div class="barcode-meta">
+        <div class="barcode-place" id="barcodePlace"></div>
+        <div class="barcode-item" id="barcodeItem"></div>
+      </div>
+      <div class="barcode-val" id="barcodeVal"></div>
+    </div>
+    <div class="barcode-divider">
+      <div class="barcode-hole left"></div>
+      <div class="barcode-dashes"></div>
+      <div class="barcode-hole right"></div>
+    </div>
+    <div class="barcode-body">
+      <div class="barcode-label">Present at register to redeem</div>
+      <div class="barcode-svg-wrap">
+        <svg id="barcodeSvg" height="80" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="barcode-code" id="barcodeCode"></div>
+    </div>
+    <div class="barcode-footer">
+      <div class="barcode-expires">Expires: <span id="barcodeExpires"></span></div>
+      <div class="barcode-privacy">🔒 Masked — visible only to you</div>
+    </div>
+    <button class="barcode-close" onclick="closeBarcode()">Done</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const quickSuggestions=['bread','eggs','rice','beans','peanut butter','banana','oats','canned tuna','cheese','apple','tortilla','yogurt','pasta','canned chickpeas','avocado'];
+let currentIngredients=[];
+let toastTimer=null;
+
+function renderQuickAdds(){
+  const container=document.getElementById('quickAdds');
+  container.innerHTML='';
+  const items=quickSuggestions.filter(s=>!currentIngredients.includes(s)).slice(0,8);
+  items.forEach(item=>{
+    const btn=document.createElement('button');
+    btn.style.cssText='padding:6px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--cream);font-family:DM Sans,sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:var(--dark);transition:all 0.15s;';
+    btn.textContent='+'+item;
+    btn.onmouseenter=()=>{btn.style.borderColor='var(--green)';btn.style.color='var(--green)'};
+    btn.onmouseleave=()=>{btn.style.borderColor='var(--border)';btn.style.color='var(--dark)'};
+    btn.onclick=()=>{currentIngredients.push(item);renderTags();renderQuickAdds();updateRemixBtn()};
+    container.appendChild(btn);
+  });
+}
+
+function addIngredient(){
+  const input=document.getElementById('ingredientInput');
+  const val=input.value.trim().toLowerCase();
+  if(!val)return;
+  if(currentIngredients.includes(val)){showToast('Already added!');input.value='';return;}
+  currentIngredients.push(val);
+  input.value='';
+  renderTags();renderQuickAdds();updateRemixBtn();
+}
+
+function renderTags(){
+  const container=document.getElementById('pantryTags');
+  if(currentIngredients.length===0){
+    container.innerHTML='<span style="font-size:12px;color:var(--text-muted);font-style:italic">No ingredients yet…</span>';
+    return;
+  }
+  container.innerHTML='';
+  currentIngredients.forEach((ing,i)=>{
+    const tag=document.createElement('div');
+    tag.className='pantry-tag';
+    tag.innerHTML=ing+' <span class="remove" onclick="removeIngredient('+i+')">✕</span>';
+    container.appendChild(tag);
+  });
+}
+
+function removeIngredient(i){
+  currentIngredients.splice(i,1);
+  renderTags();renderQuickAdds();updateRemixBtn();
+}
+
+function updateRemixBtn(){
+  document.getElementById('remixBtn').disabled=currentIngredients.length<2;
+}
+
+async function generateRecipes(){
+  if(currentIngredients.length<2)return;
+  const output=document.getElementById('recipeOutput');
+  const btn=document.getElementById('remixBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span>⏳</span> Remixing…';
+  output.innerHTML='<div class="loading-pulse"><div class="pulse-dots"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><div class="loading-text">Finding recipes from your pantry…</div></div>';
+  const systemPrompt=`You are a nutritionist AI for SafeBite, an app for students on free lunch programs. Given a list of ingredients a student has at home, generate 2 creative, nutritious, NO-COOK recipes (no stove, no oven needed). Each recipe must be simple, fast, and satisfying.\n\nRespond ONLY with valid JSON (no markdown, no extra text):\n{\n  "recipes": [\n    {\n      "name": "Recipe Name",\n      "time": "5 min",\n      "calories": "~400 cal",\n      "tags": ["High Protein", "Quick"],\n      "ingredients": ["ingredient 1", "ingredient 2"],\n      "steps": ["Step one description", "Step two description", "Step three description"]\n    }\n  ]\n}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:systemPrompt,
+        messages:[{role:'user',content:'Ingredients I have: '+currentIngredients.join(', ')}]
+      })
+    });
+    const data=await res.json();
+    const raw=data.content.map(b=>b.text||'').join('');
+    const clean=raw.replace(/```json|```/g,'').trim();
+    renderRecipes(JSON.parse(clean).recipes);
+  }catch(e){
+    output.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Couldn\'t generate recipes right now. Try again in a moment.</div></div>';
+  }
+  btn.disabled=false;
+  btn.innerHTML='<span>✨</span> Remix My Pantry';
+}
+
+function renderRecipes(recipes){
+  const output=document.getElementById('recipeOutput');
+  if(!recipes||recipes.length===0){
+    output.innerHTML='<div class="empty-state"><div class="empty-icon">🤔</div><div class="empty-text">Not enough ingredients for a recipe. Try adding a few more.</div></div>';
+    return;
+  }
+  output.innerHTML='';
+  recipes.forEach(recipe=>{
+    const tagHtml=(recipe.tags||[]).map(t=>{
+      let cls='pill-green';
+      if(t.toLowerCase().includes('quick')||t.toLowerCase().includes('fast'))cls='pill-orange';
+      if(t.toLowerCase().includes('protein'))cls='pill-gold';
+      return`<span class="pill-badge ${cls}">${t}</span>`;
+    }).join('');
+    const ingHtml=(recipe.ingredients||[]).map(i=>`<span class="recipe-ing">${i}</span>`).join('');
+    const stepsHtml=(recipe.steps||[]).map((s,i)=>`<div class="recipe-step"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`).join('');
+    const card=document.createElement('div');
+    card.className='recipe-card';
+    card.innerHTML=`<div class="recipe-header"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div class="recipe-title">${recipe.name}</div><span class="no-cook-badge">🔥 No Cook</span></div><div style="display:flex;gap:6px;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:var(--text-muted)">⏱ ${recipe.time||'10 min'}</span><span style="font-size:12px;color:var(--text-muted)">·</span><span style="font-size:12px;color:var(--text-muted)">🔥 ${recipe.calories||'~350 cal'}</span></div><div class="recipe-tags">${tagHtml}</div></div><div class="recipe-body"><div class="recipe-section-label">Ingredients Used</div><div class="recipe-ingredients">${ingHtml}</div><div class="recipe-section-label">How to Make It</div><div class="recipe-steps">${stepsHtml}</div></div>`;
+    output.appendChild(card);
+  });
+}
+
+function switchTab(tab,el){
+  document.querySelectorAll('#mainApp > .screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(tab+'Screen').classList.add('active');
+  el.classList.add('active');
+}
+
+function doLogin(){
+  const id=document.getElementById('schoolId').value.trim();
+  const pin=document.getElementById('pin').value.trim();
+  if(!id||pin.length<4){showToast('Please fill in both fields');return;}
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('mainApp').classList.add('active');
+  renderTags();renderQuickAdds();
+}
+
+function switchToLogin(){
+  document.getElementById('mainApp').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+  document.getElementById('schoolId').value='';
+  document.getElementById('pin').value='';
+}
+
+function claimMeal(btn,place){
+  btn.disabled=true;
+  btn.textContent='Claimed ✓';
+  btn.style.background='var(--green-pale)';
+  btn.style.color='var(--green)';
+  const slots=btn.closest('.meal-card-bottom').querySelector('.meal-slots');
+  const count=parseInt(slots.textContent)||0;
+  if(count>0)slots.textContent=(count-1)+' meals left today';
+  showToast('🎉 Meal claimed at '+place+'!');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+function generateBarcodeSVG(code){
+  const svg=document.getElementById('barcodeSvg');
+  const W=280,H=80;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML='';
+  const seed=code.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const pattern=[2,1,3,1,2,3,1,2,1,3,2,1,1,3,2,1,3,1,2,2,1,3,1,2,3,1,1,2,3,1,2,1,3,2,1,2,3,1,1,2,3,2,1,1,3,2,1,2,1,3,2,3,1,1,2,3,2,1,1,3];
+  let totalW=0;
+  const widths=pattern.map((p,i)=>{const w=((seed*(i+7)*31+i*17)%3)+p;totalW+=w;return w});
+  const scale=(W-20)/totalW;
+  let x=10;
+  widths.forEach((w,i)=>{
+    const bw=Math.max(1,Math.round(w*scale));
+    if(i%2===0){
+      const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('x',x);rect.setAttribute('y',0);
+      rect.setAttribute('width',bw);rect.setAttribute('height',H);
+      rect.setAttribute('fill','#1A1A14');
+      svg.appendChild(rect);
+    }
+    x+=bw;
+  });
+}
+
+function showBarcode(place,item,val,expires,emoji,bg,code){
+  document.getElementById('barcodeEmoji').textContent=emoji;
+  document.getElementById('barcodeEmoji').style.background=bg;
+  document.getElementById('barcodePlace').textContent=place;
+  document.getElementById('barcodeItem').textContent=item;
+  document.getElementById('barcodeVal').textContent=val;
+  document.getElementById('barcodeExpires').textContent=expires;
+  document.getElementById('barcodeCode').textContent=code;
+  generateBarcodeSVG(code);
+  document.getElementById('barcodeModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeBarcode(){
+  document.getElementById('barcodeModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+</script>
+</body>
+</html>
